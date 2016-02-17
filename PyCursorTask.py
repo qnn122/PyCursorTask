@@ -98,7 +98,6 @@ class BciApplication(BciGenericApplication):
 						color= [0, 0.5, 0.5],
 					  	on=True)
 
-
 		# Config Screen
 		self.screen.SetDefaultFont('comic sans ms', 30)
 		self.screen.bgcolor = [0., 0., 0.]
@@ -160,8 +159,14 @@ class BciApplication(BciGenericApplication):
 				self.stimuli['Target'].position = (w - wTar/2, h/2)
 				self.states['TargetCode'] = 2  # For nex trial
 
+			# Return to the initial state
+			self.stimuli['Cursor'].position = (w/2, h/2)
+			self.stimuli['Cursor'].color = [1, 0.5, 0.5]
+			self.stimuli['Target'].color = [0, 0.5, 0.5]
+
 			# HIde cursor
 			self.stimuli['Cursor'].on = False
+
 
 		if phase == 'Feedback':
 			# Display current stage
@@ -172,7 +177,7 @@ class BciApplication(BciGenericApplication):
 
 			# Show Cursor
 			self.stimuli['Cursor'].on = True
-			self.stimuli['Cursor'].position = (w/2, h/2)
+
 
 		if phase == 'PostFeedback':
 			# Display current stage
@@ -194,6 +199,7 @@ class BciApplication(BciGenericApplication):
 		# update stimulus parameters if they need to be animated on a frame-by-frame basis
 		intensity = 0.5 + 0.5 * numpy.sin(2.0 * numpy.pi * 0.5 * self.since('run')['msec']/1000.0)
 		self.screen.bgcolor = intensity * self.color
+
 		
 	#############################################################
 	
@@ -210,8 +216,10 @@ class BciApplication(BciGenericApplication):
 			if event.key == pygame.K_LEFT: self.moveLeft()
 			if event.key == pygame.K_RIGHT: self.moveRight()
 
-		if self.isTargetHit:
+		if self.isTargetHit():
+			print 'Hit!'
 			self.TargetHit()
+
 		
 	#############################################################
 	
@@ -225,7 +233,8 @@ class BciApplication(BciGenericApplication):
 	def isTargetHit(self): 	# Text collision of 2 objects
 		mCursor = self.stimuli['Cursor']
 		mTarget = self.stimuli['Target']
-		if abs(mCursor.position[0] - mTarget.position[0]) <= (mCursor.radius + mTarget.size[0]/2):
+		d = abs(mCursor.position[0] - mTarget.position[0])
+		if d < (mCursor.radius + mTarget.size[0]/2):
 			return True
 		else:
 			return False
@@ -248,6 +257,7 @@ class BciApplication(BciGenericApplication):
 		posX = mCursor.position[0]
 		posY = mCursor.position[1]
 		mCursor.position = (posX + cursorSpeed, posY)
+
 
 #################################################################
 #################################################################
