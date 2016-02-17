@@ -89,12 +89,20 @@ class BciApplication(BciGenericApplication):
 		wTar = 60
 		hTar = 240
 
-		# Target - filled rectangle patch
-		self.stimulus('Target', self.VisualStimuli.Block,
+		# Targets - filled rectangle patch
+		self.stimulus('LeftTarget', self.VisualStimuli.Block,
 						anchor= 'upperleft',
 						position= [0, h*0.8],
 						size= [wTar, hTar],
-						color= [0, 0.5, 0.5])
+						color= [0, 0.5, 0.5],
+					  	on=True)
+
+		self.stimulus('RightTarget', self.VisualStimuli.Block,
+						anchor= 'upperleft',
+						position= [w-wTar, h*0.8],
+						size= [wTar, hTar],
+						color= [0, 0.5, 0.5],
+					  	on=False)
 
 		# Config Screen
 		self.screen.SetDefaultFont('comic sans ms', 30)
@@ -110,11 +118,11 @@ class BciApplication(BciGenericApplication):
 		self.stimulus('Cursor', self.VisualStimuli.Disc,
 					  position=[w/2, h/2],
 					  radius= 20,
-					  color= [1, 0.5, 0.5])
+					  color= [1, 0.5, 0.5],
+					  on= False)
+		global cursorSpeed, mCursor, posX, posY
 		cursorSpeed = 30
-		mCursor = self.stimuli['Cursor']
-		posX = mCursor.position[0]
-		posY = mCursor.position[1]
+
 
 
 
@@ -147,7 +155,6 @@ class BciApplication(BciGenericApplication):
 			# Display current stage
 			self.stimuli['SomeText'].text = 'PreFeedback stage'
 
-
 			# Set state
 			if self.stimuli['LeftTarget'].on:
 				self.states['TargetCode'] = 2 	# TargetCode != 0 --> Trial begin
@@ -157,7 +164,9 @@ class BciApplication(BciGenericApplication):
 			# Display Target
 			self.stimuli['LeftTarget'].on = not self.stimuli['LeftTarget'].on
 			self.stimuli['RightTarget'].on = not self.stimuli['RightTarget'].on
-			self.stimuli['Cursor'].on = False 	# we dont wanna see the cursor until the Feedback stage
+
+			# Hide cursor
+			self.stimuli['Cursor'].on = False
 
 		if phase == 'Feedback':
 			# Display current stage
@@ -175,6 +184,7 @@ class BciApplication(BciGenericApplication):
 
 			# Set Feedback state to 0 --> stop Feedback
 			self.states['Feedback'] = 0
+
 		
 	#############################################################
 	
@@ -222,11 +232,17 @@ class BciApplication(BciGenericApplication):
 		self.stimuli['Target'].color = hitColor
 
 	def moveLeft(self):
-		global cursorSpeed, posX, posY, mCursor
+		#global cursorSpeed, posX, posY, mCursor
+		mCursor = self.stimuli['Cursor']
+		posX = mCursor.position[0]
+		posY = mCursor.position[1]
 		mCursor.position = (posX - cursorSpeed, posY)
 
 	def moveRight(self):
-		global cursorSpeed, posX, posY, mCursor
+		#global cursorSpeed, posX, posY, mCursor
+		mCursor = self.stimuli['Cursor']
+		posX = mCursor.position[0]
+		posY = mCursor.position[1]
 		mCursor.position = (posX + cursorSpeed, posY)
 
 #################################################################
