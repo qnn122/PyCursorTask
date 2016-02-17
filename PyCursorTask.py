@@ -83,6 +83,7 @@ class BciApplication(BciGenericApplication):
 		                                 # contains at least Text, Disc, Block and ImageStimulus classes for all renderers
 
 		# Screensize
+		global w, h, wTar, hTar
 		w,h = self.screen.size
 
 		# Target Dimension
@@ -90,19 +91,13 @@ class BciApplication(BciGenericApplication):
 		hTar = 240
 
 		# Targets - filled rectangle patch
-		self.stimulus('LeftTarget', self.VisualStimuli.Block,
-						anchor= 'upperleft',
-						position= [0, h*0.8],
+		self.stimulus('Target', self.VisualStimuli.Block,
+						anchor= 'center',
+						position= (0, h/2),
 						size= [wTar, hTar],
-						color= [0, 0.5, 0.5],
+						color= [1, 0.5, 0.5],
 					  	on=True)
 
-		self.stimulus('RightTarget', self.VisualStimuli.Block,
-						anchor= 'upperleft',
-						position= [w-wTar, h*0.8],
-						size= [wTar, hTar],
-						color= [0, 0.5, 0.5],
-					  	on=False)
 
 		# Config Screen
 		self.screen.SetDefaultFont('comic sans ms', 30)
@@ -116,12 +111,15 @@ class BciApplication(BciGenericApplication):
 
 		# Cursor - a filled circle
 		self.stimulus('Cursor', self.VisualStimuli.Disc,
-					  position=[w/2, h/2],
+					  position=(w/2, h/2),
 					  radius= 20,
 					  color= [1, 0.5, 0.5],
 					  on= False)
-		global cursorSpeed, mCursor, posX, posY
+		global cursorSpeed
 		cursorSpeed = 30
+
+		# Set initial Targetcode
+		self.states['TargetCode'] = 2
 
 
 
@@ -149,21 +147,18 @@ class BciApplication(BciGenericApplication):
 	#############################################################
 	
 	def Transition(self, phase):
-		global h, wTar, hTar
 		# present stimuli and update state variables to record what is going on
 		if phase == 'PreFeedback':
 			# Display current stage
 			self.stimuli['SomeText'].text = 'PreFeedback stage'
 
 			# Set state
-			if self.stimuli['LeftTarget'].on:
-				self.states['TargetCode'] = 2 	# TargetCode != 0 --> Trial begin
-			elif self.stimuli['RightTarget'].on:
-				self.states['TargetCode'] = 3
-
-			# Display Target
-			self.stimuli['LeftTarget'].on = not self.stimuli['LeftTarget'].on
-			self.stimuli['RightTarget'].on = not self.stimuli['RightTarget'].on
+			if self.states['TargetCode'] == 2:
+				self.stimuli['Target'].position = (0, h/2)
+				self.states['TargetCode'] = 3  # For nex trial
+			elif self.states['TargetCode'] == 3:
+				self.stimuli['Target'].position = (w - wTar/2, h/2)
+				self.states['TargetCode'] = 2  # For nex trial
 
 			# Hide cursor
 			self.stimuli['Cursor'].on = False
@@ -175,7 +170,7 @@ class BciApplication(BciGenericApplication):
 			# Set Feedback state to 1 --> Feedback begins
 			self.states['Feedback'] = 1
 
-			# Move Cursor
+			# Show Cursor
 			self.stimuli['Cursor'].on = True
 
 		if phase == 'PostFeedback':
@@ -204,6 +199,7 @@ class BciApplication(BciGenericApplication):
 	def Event(self, phase, event):
 		mCursor = self.stimuli['Cursor']
 
+
 		# respond to pygame keyboard and mouse events
 		import pygame.locals
 		if event.type == pygame.locals.KEYDOWN:
@@ -212,6 +208,9 @@ class BciApplication(BciGenericApplication):
 			if event.key == ord('b'): self.color[:] = [0,0,1]
 			if event.key == pygame.K_LEFT: self.moveLeft()
 			if event.key == pygame.K_RIGHT: self.moveRight()
+
+		if self.isTargetHit:
+			self.TargetHit()
 		
 	#############################################################
 	
@@ -222,7 +221,7 @@ class BciApplication(BciGenericApplication):
 	############################################################
 	# Self-developed methods
 	###########################################################
-	def isTargetHitself(self):
+	def isTargetHit(self, obj1, obj2): 	# Text collision of 2 objects
 		mCursor = self.stimuli['Cursor']
 		return True
 
