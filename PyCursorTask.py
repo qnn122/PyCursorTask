@@ -95,7 +95,7 @@ class BciApplication(BciGenericApplication):
 						anchor= 'center',
 						position= (0, h/2),
 						size= [wTar, hTar],
-						color= [1, 0.5, 0.5],
+						color= [0, 0.5, 0.5],
 					  	on=True)
 
 
@@ -160,7 +160,7 @@ class BciApplication(BciGenericApplication):
 				self.stimuli['Target'].position = (w - wTar/2, h/2)
 				self.states['TargetCode'] = 2  # For nex trial
 
-			# Hide cursor
+			# HIde cursor
 			self.stimuli['Cursor'].on = False
 
 		if phase == 'Feedback':
@@ -172,6 +172,7 @@ class BciApplication(BciGenericApplication):
 
 			# Show Cursor
 			self.stimuli['Cursor'].on = True
+			self.stimuli['Cursor'].position = (w/2, h/2)
 
 		if phase == 'PostFeedback':
 			# Display current stage
@@ -221,12 +222,16 @@ class BciApplication(BciGenericApplication):
 	############################################################
 	# Self-developed methods
 	###########################################################
-	def isTargetHit(self, obj1, obj2): 	# Text collision of 2 objects
+	def isTargetHit(self): 	# Text collision of 2 objects
 		mCursor = self.stimuli['Cursor']
-		return True
+		mTarget = self.stimuli['Target']
+		if abs(mCursor.position[0] - mTarget.position[0]) <= (mCursor.radius + mTarget.size[0]/2):
+			return True
+		else:
+			return False
 
 	def TargetHit(self):
-		hitColor = [0.8, 0.8, 0.8]
+		hitColor = [1, 1, 1]
 		self.stimuli['Cursor'].color = hitColor
 		self.stimuli['Target'].color = hitColor
 
