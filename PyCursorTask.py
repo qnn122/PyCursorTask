@@ -84,7 +84,9 @@ class BciApplication(BciGenericApplication):
 
 		# Screensize
 		global w, h, wTar, hTar
+		global v0
 		w,h = self.screen.size
+		v0 = w/(2*float(self.params['FeedbackDuration'][0])*1000)			# Used to determine the velocity of the cursor
 
 		# Target Dimension
 		wTar = 60
@@ -113,14 +115,13 @@ class BciApplication(BciGenericApplication):
 					  position=(w/2, h/2),
 					  radius= 20,
 					  color= [1, 0.5, 0.5],
+					  anchor='center',
 					  on= False)
 		global cursorSpeed
 		cursorSpeed = 30
 
 		# Set initial Targetcode
 		self.states['TargetCode'] = 2
-
-
 
 
 	#############################################################
@@ -190,16 +191,22 @@ class BciApplication(BciGenericApplication):
 	#############################################################
 	
 	def Process(self, sig):
-		# process the new signal packet
-		pass  # or not.
-		
+		mCursor = self.stimuli['Cursor']
+		posX = mCursor.position[0]
+		posY = mCursor.position[1]
+		if abs(sig.A[0]) <= 1:
+			mCursor.position = (float(sig.A[0])*v0*w*10 + w/2, posY)
+		else:
+			mCursor.position = (posX, posY)
+
+		# print mCursor.position
+
 	#############################################################
 	
 	def Frame(self, phase):
 		# update stimulus parameters if they need to be animated on a frame-by-frame basis
 		intensity = 0.5 + 0.5 * numpy.sin(2.0 * numpy.pi * 0.5 * self.since('run')['msec']/1000.0)
 		self.screen.bgcolor = intensity * self.color
-
 		
 	#############################################################
 	
@@ -245,7 +252,6 @@ class BciApplication(BciGenericApplication):
 		"""Activities after a Target got hit, including:
 		- Change states
 		- Light up both Cursor and Target
-		- Freeze the screen, stop all other events
 		- Immediately jump to next phase
 		:return:
 		"""
@@ -258,8 +264,6 @@ class BciApplication(BciGenericApplication):
 		hitColor = [1, 1, 1]
 		self.stimuli['Cursor'].color = hitColor
 		self.stimuli['Target'].color = hitColor
-
-		# Freeze the screen
 
 		# Immediately jump to the next phase
 		self.change_phase('PostFeedback')
@@ -277,6 +281,7 @@ class BciApplication(BciGenericApplication):
 		posX = mCursor.position[0]
 		posY = mCursor.position[1]
 		mCursor.position = (posX + cursorSpeed, posY)
+
 
 
 #################################################################
