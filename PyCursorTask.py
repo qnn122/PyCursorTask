@@ -137,11 +137,11 @@ class BciApplication(BciGenericApplication):
 		PostFeedbackDuration = float(self.params['PostFeedbackDuration'][0])*1000
 		MaxFeedbackDuration = float(self.params['MaxFeedbackDuration'][0])*1000
 
-		self.phase(name='PreFeedback', 	duration= 		PreFeedbackDuration, 	next= 'Feedback')
-		self.phase(name='Feedback',		duration= 		MaxFeedbackDuration,	next= 'PostFeedback') # MaxFeedbackDuration as hard time limit
-		self.phase(name='PostFeedback', duration=		PostFeedbackDuration,	next= 'PreFeedback')
+		self.phase(name='PreFeedback',	next= 'Feedback',		duration= PreFeedbackDuration, 	)
+		self.phase(name='Feedback',		next= 'PostFeedback',	duration= MaxFeedbackDuration,	) # MaxFeedbackDuration as hard time limit
+		self.phase(name='PostFeedback', next= 'PreFeedback',	duration= PostFeedbackDuration	)
 
-		self.design(start='PreFeedback')
+		self.design(start='PreFeedback') # First phase
 		
 	#############################################################
 	
@@ -217,7 +217,6 @@ class BciApplication(BciGenericApplication):
 			if event.key == pygame.K_RIGHT: self.moveRight()
 
 		if self.isTargetHit():
-			print 'Hit!'
 			self.TargetHit()
 
 		
@@ -231,18 +230,39 @@ class BciApplication(BciGenericApplication):
 	# Self-developed methods
 	###########################################################
 	def isTargetHit(self): 	# Text collision of 2 objects
+		"""Check if any target was hit
+		:return: True if hit, False otherwise
+		"""
 		mCursor = self.stimuli['Cursor']
 		mTarget = self.stimuli['Target']
-		d = abs(mCursor.position[0] - mTarget.position[0])
+		d = abs(mCursor.position[0] - mTarget.position[0]) 	# distance btw Target and Cursor
 		if d < (mCursor.radius + mTarget.size[0]/2):
 			return True
 		else:
 			return False
 
 	def TargetHit(self):
+		"""Activities after a Target got hit, including:
+		- Change states
+		- Light up both Cursor and Target
+		- Freeze the screen, stop all other events
+		- Immediately jump to next phase
+		:return:
+		"""
+		# Change states
+		self.states['ResultCode'] = self.states['TargetCode']
+		self.states['Feedback'] = 0  	# Stop feedback
+		print 'Hit! Target #"%f"' % self.states['ResultCode']
+
+		# Light up Cursor and Target
 		hitColor = [1, 1, 1]
 		self.stimuli['Cursor'].color = hitColor
 		self.stimuli['Target'].color = hitColor
+
+		# Freeze the screen
+
+		# Immediately jump to the next phase
+		self.change_phase('PostFeedback')
 
 	def moveLeft(self):
 		#global cursorSpeed, posX, posY, mCursor
